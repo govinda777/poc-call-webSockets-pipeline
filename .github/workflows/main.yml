@@ -23,7 +23,7 @@ jobs:
     - name: Wait for security check result via WebSocket
       run: |
         # Você pode usar uma ferramenta CLI para WebSockets, como websocat
-        RESULT=$(websocat -1 "ws://your-fastapi-url/ws/$CHECK_ID")
+        RESULT=$(websocat -1 "ws://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/ws/$CHECK_ID")
         echo "Security Check Result: $RESULT"
         if [ "$RESULT" != "approved" ]; then
           echo "Security check failed!"
