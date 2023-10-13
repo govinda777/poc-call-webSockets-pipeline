@@ -13,31 +13,48 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    # ... (outros passos que você possa ter, como build, testes, etc.)
-
     - name: Start security check
       id: start-check
       run: |
         CHECK_RESPONSE=$(curl -s -X POST "http://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/start-check")
         echo "Response: $CHECK_RESPONSE"
-        CHECK_ID=$(echo $CHECK_RESPONSE | tr -d '\"')
-        echo "CHECK_ID=$CHECK_ID" >> $GITHUB_ENV
+        echo "CHECK_ID=$(echo $CHECK_RESPONSE | tr -d '\"')" >> $GITHUB_ENV
 
-    - name: Install websocat
+    - name: Install websocket-client
+      run: pip install websocket-client
+
+    - name: Create WebSocket client script
       run: |
-        wget -O websocat https://github.com/vi/websocat/releases/download/v1.8.0/websocat_amd64-linux -q
-        chmod +x websocat
-        sudo mv websocat /usr/local/bin/
+        cat << EOF > ws_client.py
+        import websocket
+        import sys
+
+        def on_message(ws, message):
+            print(f"Received message: {message}")
+            if message == "approved":
+                sys.exit(0)
+            else:
+                sys.exit(1)
+
+        def on_error(ws, error):
+            print(f"Error: {error}")
+            sys.exit(1)
+
+        def on_close(ws, close_status_code, close_msg):
+            print("Connection closed")
+
+        def main():
+            check_id = sys.argv[1]
+            ws_url = f"ws://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/ws/{check_id}"
+            ws = websocket.WebSocketApp(ws_url,
+                                        on_message=on_message,
+                                        on_error=on_error,
+                                        on_close=on_close)
+            ws.run_forever()
+
+        if __name__ == "__main__":
+            main()
+        EOF
 
     - name: Wait for security check result via WebSocket
-      run: |
-        if [ -z "$CHECK_ID" ]; then
-          echo "CHECK_ID is not set!"
-          exit 1
-        fi
-        RESULT=$(timeout 300 websocat -E -1 "ws://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/ws/$CHECK_ID")
-        echo "Security Check Result: $RESULT"
-        if [ "$RESULT" != "approved" ]; then
-          echo "Security check failed!"
-          exit 1
-        fi
+      run: python ws_client.py $CHECK_ID
