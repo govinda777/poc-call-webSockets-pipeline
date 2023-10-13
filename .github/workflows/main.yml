@@ -31,7 +31,7 @@ jobs:
 
         def on_message(ws, message):
             print(f"Received message: {message}")
-            if message == "approved1":
+            if message == "approved":
                 sys.exit(0)
             else:
                 sys.exit(1)
