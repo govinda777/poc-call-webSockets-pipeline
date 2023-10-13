@@ -1,5 +1,5 @@
 # poc-call-webSockets-pipeline
-......
+
 ## Security Check via WebSockets
 
 Este projeto implementa uma verificação de segurança que é acionada por uma pipeline do GitHub. A verificação é realizada por uma API FastAPI e o resultado é comunicado de volta à pipeline via WebSockets.
