@@ -1,0 +1,31 @@
+name: Security Check Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Start security check
+      id: start-check
+      run: |
+        CHECK_RESPONSE=$(curl -s -X POST "https://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/start-check")
+        echo "Response: $CHECK_RESPONSE"
+        echo "CHECK_ID=$(echo $CHECK_RESPONSE | jq -r '.check_id')" >> $GITHUB_ENV
+
+    - name: Wait for security check result via WebSocket
+      run: |
+        # Você pode usar uma ferramenta CLI para WebSockets, como websocat
+        RESULT=$(websocat -1 "ws://your-fastapi-url/ws/$CHECK_ID")
+        echo "Security Check Result: $RESULT"
+        if [ "$RESULT" != "approved" ]; then
+          echo "Security check failed!"
+          exit 1
+        fi
