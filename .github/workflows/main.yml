@@ -13,16 +13,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # ... (outros passos que você possa ter, como build, testes, etc.)
+
     - name: Start security check
       id: start-check
       run: |
-        CHECK_RESPONSE=$(curl -s -X POST "https://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/start-check")
+        CHECK_RESPONSE=$(curl -s -X POST "http://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/start-check")
         echo "Response: $CHECK_RESPONSE"
         echo "CHECK_ID=$(echo $CHECK_RESPONSE | jq -r '.check_id')" >> $GITHUB_ENV
 
+    - name: Install websocat
+      run: |
+        wget -O websocat https://github.com/vi/websocat/releases/download/v1.8.0/websocat_amd64-linux -q
+        chmod +x websocat
+        sudo mv websocat /usr/local/bin/
+
     - name: Wait for security check result via WebSocket
       run: |
-        # Você pode usar uma ferramenta CLI para WebSockets, como websocat
         RESULT=$(websocat -1 "ws://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/ws/$CHECK_ID")
         echo "Security Check Result: $RESULT"
         if [ "$RESULT" != "approved" ]; then
