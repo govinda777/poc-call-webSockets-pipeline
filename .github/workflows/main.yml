@@ -38,7 +38,10 @@ jobs:
 
         def on_error(ws, error):
             print(f"Error: {error}")
-            sys.exit(1)
+            if error == 0:
+              sys.exit(0)
+            else:
+              sys.exit(1)
 
         def on_close(ws, close_status_code, close_msg):
             print("Connection closed")
