@@ -20,7 +20,7 @@ jobs:
       run: |
         CHECK_RESPONSE=$(curl -s -X POST "http://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/start-check")
         echo "Response: $CHECK_RESPONSE"
-        echo "CHECK_ID=$CHECK_RESPONSE" >> $GITHUB_ENV
+        echo "CHECK_ID=$(echo $CHECK_RESPONSE | tr -d '\"')" >> $GITHUB_ENV
 
     - name: Install websocat
       run: |
