@@ -20,7 +20,8 @@ jobs:
       run: |
         CHECK_RESPONSE=$(curl -s -X POST "http://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/start-check")
         echo "Response: $CHECK_RESPONSE"
-        echo "CHECK_ID=$(echo $CHECK_RESPONSE | tr -d '\"')" >> $GITHUB_ENV
+        CHECK_ID=$(echo $CHECK_RESPONSE | tr -d '\"')
+        echo "CHECK_ID=$CHECK_ID" >> $GITHUB_ENV
 
     - name: Install websocat
       run: |
@@ -30,7 +31,11 @@ jobs:
 
     - name: Wait for security check result via WebSocket
       run: |
-        RESULT=$(websocat -1 "ws://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/ws/$CHECK_ID")
+        if [ -z "$CHECK_ID" ]; then
+          echo "CHECK_ID is not set!"
+          exit 1
+        fi
+        RESULT=$(timeout 300 websocat -E -1 "ws://poccallwebsocketsapi-9ef338a96eff.herokuapp.com/ws/$CHECK_ID")
         echo "Security Check Result: $RESULT"
         if [ "$RESULT" != "approved" ]; then
           echo "Security check failed!"
